@@ -1178,8 +1178,8 @@
 		50FD7B450FFAA8C6004073B5 /* atlastest.png in Resources */ = {isa = PBXBuildFile; fileRef = 506882680E957C4A00F943E5 /* atlastest.png */; };
 		6F305B5F0FB9D2790052E700 /* TransformUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F305B5D0FB9D2790052E700 /* TransformUtils.h */; };
 		6F305B600FB9D2790052E700 /* TransformUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F305B5E0FB9D2790052E700 /* TransformUtils.m */; };
-		97CB01F3169DD7EF002B48DA /* b2GridPhase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 97CB01F1169DD7EF002B48DA /* b2GridPhase.cpp */; };
-		97CB01F4169DD7EF002B48DA /* b2GridPhase.h in Headers */ = {isa = PBXBuildFile; fileRef = 97CB01F2169DD7EF002B48DA /* b2GridPhase.h */; };
+		9737C7BF169F2137003AF184 /* b2GridPhase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 97CB01F1169DD7EF002B48DA /* b2GridPhase.cpp */; };
+		9737C7C0169F2137003AF184 /* b2GridPhase.h in Headers */ = {isa = PBXBuildFile; fileRef = 97CB01F2169DD7EF002B48DA /* b2GridPhase.h */; };
 		A00942C915180C730029A5C6 /* b1.png in Resources */ = {isa = PBXBuildFile; fileRef = 5001659D0E72DB470085673F /* b1.png */; };
 		A00942CA15180C730029A5C6 /* b2.png in Resources */ = {isa = PBXBuildFile; fileRef = 5001659E0E72DB470085673F /* b2.png */; };
 		A00942CB15180C730029A5C6 /* f1.png in Resources */ = {isa = PBXBuildFile; fileRef = 5001659F0E72DB470085673F /* f1.png */; };
@@ -7568,6 +7568,7 @@
 				A0DABE231426715A00F3FEBE /* b2WeldJoint.h in Headers */,
 				A0DABE251426715A00F3FEBE /* b2WheelJoint.h in Headers */,
 				A0DABE271426715A00F3FEBE /* b2Rope.h in Headers */,
+				9737C7C0169F2137003AF184 /* b2GridPhase.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7575,7 +7576,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				97CB01F4169DD7EF002B48DA /* b2GridPhase.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -11471,6 +11471,7 @@
 				A0DABE221426715A00F3FEBE /* b2WeldJoint.cpp in Sources */,
 				A0DABE241426715A00F3FEBE /* b2WheelJoint.cpp in Sources */,
 				A0DABE261426715A00F3FEBE /* b2Rope.cpp in Sources */,
+				9737C7BF169F2137003AF184 /* b2GridPhase.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -11693,7 +11694,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				97CB01F3169DD7EF002B48DA /* b2GridPhase.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
