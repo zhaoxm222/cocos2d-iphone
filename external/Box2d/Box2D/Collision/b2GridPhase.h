@@ -13,7 +13,7 @@
 #include <Box2D/Common/b2Math.h>
 
 #define GRID_COLLISION_SIZE 16
-#define DEFAULT_GRID_COLLISION_COUNT 1000
+#define DEFAULT_GRID_CAPACITY 1000
 
 struct b2Grid
 {
@@ -35,6 +35,8 @@ public:
     
     void SetPosition( b2Vec2& pos );
     
+     
+    
 private:
     /// grid phase left top pos
     b2Vec2 pos_;
@@ -44,11 +46,14 @@ private:
     
     /// collision data
     uint8* collisionData_;
+    uint32 collisionDataSize_;
+    uint32 collisionDataCapacity_;
 
     /// grids matrix
     uint32* grids_;
     b2Grid* gridData_;
     uint32 gridDataSize_;
+    uint32 gridDataCapacity_;
 };
 
 
