@@ -22,6 +22,7 @@
 #include <Box2D/Dynamics/b2Body.h>
 #include <Box2D/Collision/b2Collision.h>
 #include <Box2D/Collision/Shapes/b2Shape.h>
+#include <Box2d/Collision/b2GridPhase.h>
 
 class b2BlockAllocator;
 class b2Body;
@@ -212,6 +213,9 @@ protected:
 	// These support body activation/deactivation.
 	void CreateProxies(b2BroadPhase* broadPhase, const b2Transform& xf);
 	void DestroyProxies(b2BroadPhase* broadPhase);
+    
+    void CreateCollision(b2GridPhase* gridPhase, const b2Transform& xf);
+    void DestroyCollision(b2GridPhase* gridPhase);
 
 	void Synchronize(b2BroadPhase* broadPhase, const b2Transform& xf1, const b2Transform& xf2);
 

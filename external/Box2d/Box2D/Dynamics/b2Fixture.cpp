@@ -149,6 +149,16 @@ void b2Fixture::DestroyProxies(b2BroadPhase* broadPhase)
 	m_proxyCount = 0;
 }
 
+void b2Fixture::CreateCollision(b2GridPhase* gridPhase, const b2Transform &xf)
+{
+    
+}
+
+void b2Fixture::DestroyCollision(b2GridPhase* gridPhase)
+{
+    
+}
+
 void b2Fixture::Synchronize(b2BroadPhase* broadPhase, const b2Transform& transform1, const b2Transform& transform2)
 {
 	if (m_proxyCount == 0)
