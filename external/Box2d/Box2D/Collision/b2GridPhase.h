@@ -38,7 +38,7 @@ public:
     
     void SetPosition( b2Vec2& pos );
     
-    void AddCollisionShape( b2Shape* shape, b2Transform tf );
+    void AddCollisionShape( b2Shape* shape, b2Transform xf );
     
 private:
     

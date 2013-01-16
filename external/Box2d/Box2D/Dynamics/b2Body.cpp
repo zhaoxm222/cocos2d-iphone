@@ -166,6 +166,9 @@ b2Fixture* b2Body::CreateFixture(const b2FixtureDef* def)
 	{
 		b2BroadPhase* broadPhase = &m_world->m_contactManager.m_broadPhase;
 		fixture->CreateProxies(broadPhase, m_xf);
+        
+        b2GridPhase* gridPhase = m_world->m_gridPhase;
+        fixture->CreateCollision(gridPhase, m_xf);
 	}
 
 	fixture->m_next = m_fixtureList;
@@ -457,6 +460,15 @@ void b2Body::SetActive(bool flag)
 		{
 			f->CreateProxies(broadPhase, m_xf);
 		}
+        
+        if( m_type == b2_staticBody )
+        {
+            for (b2Fixture* f = m_fixtureList; f; f = f->m_next)
+            {
+                b2GridPhase* gridPhase = m_world->m_gridPhase;
+                f->CreateCollision(gridPhase, m_xf);
+            }
+        }
 
 		// Contacts are created the next time step.
 	}

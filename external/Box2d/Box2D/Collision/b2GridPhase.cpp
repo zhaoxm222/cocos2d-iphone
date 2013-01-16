@@ -6,8 +6,14 @@
 //
 //
 
-#include <Box2D/Collision/b2GridPhase.h>
 #include <memory>
+
+#include <Box2D/Collision/b2GridPhase.h>
+#include <Box2D/Collision/Shapes/b2CircleShape.h>
+#include <Box2D/Collision/Shapes/b2EdgeShape.h>
+#include <Box2D/Collision/Shapes/b2ChainShape.h>
+#include <Box2D/Collision/Shapes/b2PolygonShape.h>
+
 
 b2GridPhase::b2GridPhase( uint32 width, uint32 height )
 {
@@ -38,15 +44,66 @@ b2GridPhase::b2GridPhase( uint32 width, uint32 height )
 }
 
 
-void b2GridPhase::AddCollisionShape(b2Shape *shape, b2Transform tf)
+void b2GridPhase::AddCollisionShape(b2Shape *shape, b2Transform xf)
 {
-    // Create proxies in the broad-phase.
-	int nChild = shape->GetChildCount();
-    
-    b2AABB aabb;
-	for (int32 i = 0; i < nChild; ++i)
+    switch (shape->GetType())
 	{
-		//shape->ComputeAABB( &aabb, tf, i);
+        case b2Shape::e_circle:
+		{
+			b2CircleShape* circle = (b2CircleShape*)shape;
+            
+			b2Vec2 center = b2Mul(xf, circle->m_p);
+			float32 radius = circle->m_radius;
+			b2Vec2 axis = b2Mul(xf.q, b2Vec2(1.0f, 0.0f));
+            
+			//DrawSolidCircle(center, radius, axis, color);
+		}
+            break;
+            
+        case b2Shape::e_edge:
+		{
+			b2EdgeShape* edge = (b2EdgeShape*)shape;
+			b2Vec2 v1 = b2Mul(xf, edge->m_vertex1);
+			b2Vec2 v2 = b2Mul(xf, edge->m_vertex2);
+			DrawLine(v1, v2);
+		}
+            break;
+            
+        case b2Shape::e_chain:
+		{
+			b2ChainShape* chain = (b2ChainShape*)shape;
+			int32 count = chain->m_count;
+			const b2Vec2* vertices = chain->m_vertices;
+            
+			b2Vec2 v1 = b2Mul(xf, vertices[0]);
+			for (int32 i = 1; i < count; ++i)
+			{
+				b2Vec2 v2 = b2Mul(xf, vertices[i]);
+				//DrawSegment(v1, v2, color);
+				//DrawCircle(v1, 0.05f, color);
+				v1 = v2;
+			}
+		}
+            break;
+            
+        case b2Shape::e_polygon:
+		{
+			b2PolygonShape* poly = (b2PolygonShape*)shape;
+			int32 vertexCount = poly->m_vertexCount;
+			b2Assert(vertexCount <= b2_maxPolygonVertices);
+			b2Vec2 vertices[b2_maxPolygonVertices];
+            
+			for (int32 i = 0; i < vertexCount; ++i)
+			{
+				vertices[i] = b2Mul(xf, poly->m_vertices[i]);
+			}
+            
+			//DrawSolidPolygon(vertices, vertexCount, color);
+		}
+            break;
+            
+        default:
+            break;
 	}
 }
 

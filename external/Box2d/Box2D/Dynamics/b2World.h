@@ -24,6 +24,7 @@
 #include <Box2D/Common/b2StackAllocator.h>
 #include <Box2D/Dynamics/b2ContactManager.h>
 #include <Box2D/Dynamics/b2WorldCallbacks.h>
+#include <Box2D/Collision/b2GridPhase.h>
 #include <Box2D/Dynamics/b2TimeStep.h>
 
 struct b2AABB;
@@ -47,6 +48,9 @@ public:
 
 	/// Destruct the world. All physics entities are destroyed and all heap memory is released.
 	~b2World();
+    
+    /// Create Grid phase
+    void CreateGridPhase( uint32 width, uint32 height, b2Vec2 pos);
 
 	/// Register a destruction listener. The listener is owned by you and must
 	/// remain in scope.
@@ -231,6 +235,8 @@ private:
 	int32 m_flags;
 
 	b2ContactManager m_contactManager;
+    
+    b2GridPhase* m_gridPhase;
 
 	b2Body* m_bodyList;
 	b2Joint* m_jointList;

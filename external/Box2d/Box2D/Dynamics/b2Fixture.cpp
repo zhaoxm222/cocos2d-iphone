@@ -151,7 +151,8 @@ void b2Fixture::DestroyProxies(b2BroadPhase* broadPhase)
 
 void b2Fixture::CreateCollision(b2GridPhase* gridPhase, const b2Transform &xf)
 {
-    
+    if( gridPhase )
+        gridPhase->AddCollisionShape(m_shape, xf);
 }
 
 void b2Fixture::DestroyCollision(b2GridPhase* gridPhase)

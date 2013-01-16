@@ -60,6 +60,8 @@ b2World::b2World(const b2Vec2& gravity)
 
 	m_contactManager.m_allocator = &m_blockAllocator;
 
+    m_gridPhase = NULL;
+    
 	memset(&m_profile, 0, sizeof(b2Profile));
 }
 
@@ -82,6 +84,21 @@ b2World::~b2World()
 
 		b = bNext;
 	}
+    
+    if( m_gridPhase )
+    {
+        b2Free( m_gridPhase );
+        m_gridPhase = NULL;
+    }
+}
+
+void b2World::CreateGridPhase(uint32 width, uint32 height, b2Vec2 pos)
+{
+    if( m_gridPhase )
+        b2Free( m_gridPhase );
+    
+    void* mem = b2Alloc( sizeof(b2GridPhase) );
+    m_gridPhase = new(mem) b2GridPhase( width, height );
 }
 
 void b2World::SetDestructionListener(b2DestructionListener* listener)
