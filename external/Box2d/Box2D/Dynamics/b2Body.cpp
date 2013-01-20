@@ -18,6 +18,7 @@
 
 #include <Box2D/Dynamics/b2Body.h>
 #include <Box2D/Dynamics/b2Fixture.h>
+#include <Box2D/Dynamics/b2Fluid.h>
 #include <Box2D/Dynamics/b2World.h>
 #include <Box2D/Dynamics/Contacts/b2Contact.h>
 #include <Box2D/Dynamics/Joints/b2Joint.h>
@@ -103,11 +104,15 @@ b2Body::b2Body(const b2BodyDef* bd, b2World* world)
 
 	m_fixtureList = NULL;
 	m_fixtureCount = 0;
+    
+    m_fluid = NULL;
 }
 
 b2Body::~b2Body()
 {
 	// shapes and joints are destroyed in b2World::Destroy
+    
+    DestroyFluid();
 }
 
 void b2Body::SetType(b2BodyType type)
@@ -264,6 +269,26 @@ void b2Body::DestroyFixture(b2Fixture* fixture)
 
 	// Reset the mass data.
 	ResetMassData();
+}
+
+b2Fluid* b2Body::CreateFluid()
+{
+    m_fluid = (b2Fluid*)b2Alloc( sizeof(b2Fluid) );
+    memset(m_fluid, 0, sizeof(b2Fluid));
+    
+    return m_fluid;
+}
+
+void b2Body::DestroyFluid()
+{
+    if( m_fluid )
+    {
+        if( m_fluid->gridID_ != b2_nullGrid )
+            
+        
+        b2Free( m_fluid );
+        m_fluid = NULL;
+    }
 }
 
 void b2Body::ResetMassData()

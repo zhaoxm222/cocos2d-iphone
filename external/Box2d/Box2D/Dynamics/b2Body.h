@@ -31,6 +31,7 @@ class b2World;
 struct b2FixtureDef;
 struct b2JointEdge;
 struct b2ContactEdge;
+struct b2Fluid;
 
 /// The body type.
 /// static: zero mass, zero velocity, may be manually moved
@@ -153,6 +154,10 @@ public:
 	/// @warning This function is locked during callbacks.
 	void DestroyFixture(b2Fixture* fixture);
 
+    /// Fluid
+    b2Fluid* CreateFluid();
+    void DestroyFluid();
+    
 	/// Set the position of the body's origin and rotation.
 	/// This breaks any contacts and wakes the other bodies.
 	/// Manipulating a body's transform may cause non-physical behavior.
@@ -442,6 +447,8 @@ private:
 
 	b2Fixture* m_fixtureList;
 	int32 m_fixtureCount;
+    
+    b2Fluid* m_fluid;
 
 	b2JointEdge* m_jointList;
 	b2ContactEdge* m_contactList;

@@ -12,6 +12,7 @@
 #include <Box2D/Common/b2Settings.h>
 #include <Box2D/Common/b2Math.h>
 #include <Box2D/Collision/Shapes/b2Shape.h>
+#include <Box2D/Dynamics/b2Body.h>
 
 #define GRID_COLLISION_SIZE 16
 #define DEFAULT_GRID_CAPACITY 1000
@@ -20,6 +21,11 @@
 
 struct b2Grid
 {
+    
+    void AddParticle( b2Body* body );
+    void DelParticle( b2Body* body );
+    
+    
     /// collision index , reference to b2GridPhase collisionData
     //uint32 collisionIdx_;
     bool collision_;
@@ -27,7 +33,11 @@ struct b2Grid
     /// user data
     void* userData_;
     
-    uint32 next_;
+    union
+    {
+        uint32 next_;
+        b2Body* body_;
+    };
 };
 
 
@@ -39,6 +49,9 @@ public:
     void SetPosition( b2Vec2& pos );
     
     void AddCollisionShape( b2Shape* shape, b2Transform xf );
+    
+    uint32 AddParticleBody( b2Body* body, b2Vec2 pos );
+    b2Vec2 GetGridForce( b2Body* body, uint32& grid, b2Vec2 newPos );
     
 private:
     
@@ -70,6 +83,17 @@ private:
     
     uint32 freeGrids_;
 };
+
+
+inline void b2Grid::AddParticle(b2Body *body)
+{
+    
+}
+
+inline void b2Grid::DelParticle(b2Body *body)
+{
+    
+}
 
 
 inline void b2GridPhase::SetPosition( b2Vec2& pos )

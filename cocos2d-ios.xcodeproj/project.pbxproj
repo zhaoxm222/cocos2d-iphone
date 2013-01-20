@@ -1180,6 +1180,10 @@
 		6F305B600FB9D2790052E700 /* TransformUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F305B5E0FB9D2790052E700 /* TransformUtils.m */; };
 		9737C7BF169F2137003AF184 /* b2GridPhase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 97CB01F1169DD7EF002B48DA /* b2GridPhase.cpp */; };
 		9737C7C0169F2137003AF184 /* b2GridPhase.h in Headers */ = {isa = PBXBuildFile; fileRef = 97CB01F2169DD7EF002B48DA /* b2GridPhase.h */; };
+		97B9547316AC14B8009AC8F3 /* b2Fluid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 97B9547116AC14B8009AC8F3 /* b2Fluid.cpp */; };
+		97B9547416AC14B8009AC8F3 /* b2Fluid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 97B9547116AC14B8009AC8F3 /* b2Fluid.cpp */; };
+		97B9547516AC14B8009AC8F3 /* b2Fluid.h in Headers */ = {isa = PBXBuildFile; fileRef = 97B9547216AC14B8009AC8F3 /* b2Fluid.h */; };
+		97B9547616AC14B8009AC8F3 /* b2Fluid.h in Headers */ = {isa = PBXBuildFile; fileRef = 97B9547216AC14B8009AC8F3 /* b2Fluid.h */; };
 		A00942C915180C730029A5C6 /* b1.png in Resources */ = {isa = PBXBuildFile; fileRef = 5001659D0E72DB470085673F /* b1.png */; };
 		A00942CA15180C730029A5C6 /* b2.png in Resources */ = {isa = PBXBuildFile; fileRef = 5001659E0E72DB470085673F /* b2.png */; };
 		A00942CB15180C730029A5C6 /* f1.png in Resources */ = {isa = PBXBuildFile; fileRef = 5001659F0E72DB470085673F /* f1.png */; };
@@ -4303,6 +4307,8 @@
 		50FBB2D9117613F500150761 /* CCActionTween.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CCActionTween.m; sourceTree = "<group>"; };
 		6F305B5D0FB9D2790052E700 /* TransformUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransformUtils.h; sourceTree = "<group>"; };
 		6F305B5E0FB9D2790052E700 /* TransformUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TransformUtils.m; sourceTree = "<group>"; };
+		97B9547116AC14B8009AC8F3 /* b2Fluid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b2Fluid.cpp; sourceTree = "<group>"; };
+		97B9547216AC14B8009AC8F3 /* b2Fluid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b2Fluid.h; sourceTree = "<group>"; };
 		97CB01F1169DD7EF002B48DA /* b2GridPhase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b2GridPhase.cpp; sourceTree = "<group>"; };
 		97CB01F2169DD7EF002B48DA /* b2GridPhase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b2GridPhase.h; sourceTree = "<group>"; };
 		A009431115180C730029A5C6 /* MultithreadTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MultithreadTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -7120,6 +7126,8 @@
 				A0DABD961426715A00F3FEBE /* b2ContactManager.h */,
 				A0DABD971426715A00F3FEBE /* b2Fixture.cpp */,
 				A0DABD981426715A00F3FEBE /* b2Fixture.h */,
+				97B9547116AC14B8009AC8F3 /* b2Fluid.cpp */,
+				97B9547216AC14B8009AC8F3 /* b2Fluid.h */,
 				A0DABD991426715A00F3FEBE /* b2Island.cpp */,
 				A0DABD9A1426715A00F3FEBE /* b2Island.h */,
 				A0DABD9B1426715A00F3FEBE /* b2TimeStep.h */,
@@ -7569,6 +7577,7 @@
 				A0DABE251426715A00F3FEBE /* b2WheelJoint.h in Headers */,
 				A0DABE271426715A00F3FEBE /* b2Rope.h in Headers */,
 				9737C7C0169F2137003AF184 /* b2GridPhase.h in Headers */,
+				97B9547616AC14B8009AC8F3 /* b2Fluid.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7576,6 +7585,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				97B9547516AC14B8009AC8F3 /* b2Fluid.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -11472,6 +11482,7 @@
 				A0DABE241426715A00F3FEBE /* b2WheelJoint.cpp in Sources */,
 				A0DABE261426715A00F3FEBE /* b2Rope.cpp in Sources */,
 				9737C7BF169F2137003AF184 /* b2GridPhase.cpp in Sources */,
+				97B9547416AC14B8009AC8F3 /* b2Fluid.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -11694,6 +11705,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				97B9547316AC14B8009AC8F3 /* b2Fluid.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

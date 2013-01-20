@@ -50,11 +50,11 @@ void b2GridPhase::AddCollisionShape(b2Shape *shape, b2Transform xf)
 	{
         case b2Shape::e_circle:
 		{
-			b2CircleShape* circle = (b2CircleShape*)shape;
+			//b2CircleShape* circle = (b2CircleShape*)shape;
             
-			b2Vec2 center = b2Mul(xf, circle->m_p);
-			float32 radius = circle->m_radius;
-			b2Vec2 axis = b2Mul(xf.q, b2Vec2(1.0f, 0.0f));
+			//b2Vec2 center = b2Mul(xf, circle->m_p);
+			//float32 radius = circle->m_radius;
+			//b2Vec2 axis = b2Mul(xf.q, b2Vec2(1.0f, 0.0f));
             
 			//DrawSolidCircle(center, radius, axis, color);
 		}
@@ -115,6 +115,7 @@ uint32 b2GridPhase::AllocateGrid()
         b2Grid* oldData = gridData_;
         
         gridDataCapacity_ *= 2;
+        
         gridData_ = (b2Grid*)b2Alloc( gridDataCapacity_ * sizeof(b2Grid) );
         
         memcpy(gridData_, oldData, gridDataSize_*sizeof(b2Grid));
@@ -171,4 +172,23 @@ void b2GridPhase::DrawLine(b2Vec2 s, b2Vec2 e)
         }
     }
     
+}
+
+
+uint32 b2GridPhase::AddParticleBody(b2Body *body, b2Vec2 pos)
+{
+    uint32 gridID = GridX( pos.x ) + GridY( pos.y ) * nWidth_;
+    
+    if( grids_[gridID] == b2_nullGrid )
+        grids_[gridID] = AllocateGrid();
+    
+    
+}
+
+
+b2Vec2 b2GridPhase::GetGridForce(b2Body *body, uint32 &grid, b2Vec2 newPos)
+{
+    b2Vec2 ret;
+    
+    return ret;
 }
