@@ -175,7 +175,7 @@ void b2GridPhase::DrawLine(b2Vec2 s, b2Vec2 e)
 }
 
 
-uint32 b2GridPhase::AddParticleBody(b2Body *body, b2Vec2 pos)
+uint32 b2GridPhase::MoveFluidParticle(b2Fluid* fluid, b2Vec2 pos)
 {
     uint32 gridID = GridX( pos.x ) + GridY( pos.y ) * nWidth_;
     

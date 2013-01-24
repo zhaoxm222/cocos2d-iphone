@@ -273,8 +273,8 @@ void b2Body::DestroyFixture(b2Fixture* fixture)
 
 b2Fluid* b2Body::CreateFluid()
 {
-    m_fluid = (b2Fluid*)b2Alloc( sizeof(b2Fluid) );
-    memset(m_fluid, 0, sizeof(b2Fluid));
+    void* mem = b2Alloc( sizeof(b2Fluid) );
+    m_fluid = new(mem) b2Fluid();
     
     return m_fluid;
 }
@@ -284,7 +284,7 @@ void b2Body::DestroyFluid()
     if( m_fluid )
     {
         if( m_fluid->gridID_ != b2_nullGrid )
-            
+            //m_world->m_gridPhase->
         
         b2Free( m_fluid );
         m_fluid = NULL;

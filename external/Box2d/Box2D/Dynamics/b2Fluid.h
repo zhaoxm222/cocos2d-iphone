@@ -9,7 +9,9 @@
 #ifndef B2_FLUID_H
 #define B2_FLUID_H
 
-#include <Box2D/Dynamics/b2Body.h>
+#include <Box2D/Common/b2Math.h>
+
+class b2Body;
 
 struct b2FluidParam
 {
@@ -54,10 +56,12 @@ struct b2FluidParam
     float lapKern;
 };
 
-
+extern b2FluidParam gFluidParam;
 
 struct b2Fluid
 {
+    b2Fluid();
+    
     b2Body* body_;
     
     // SPH pressure

@@ -12,7 +12,7 @@
 #include <Box2D/Common/b2Settings.h>
 #include <Box2D/Common/b2Math.h>
 #include <Box2D/Collision/Shapes/b2Shape.h>
-#include <Box2D/Dynamics/b2Body.h>
+#include <Box2D/Dynamics/b2Fluid.h>
 
 #define GRID_COLLISION_SIZE 16
 #define DEFAULT_GRID_CAPACITY 1000
@@ -50,7 +50,9 @@ public:
     
     void AddCollisionShape( b2Shape* shape, b2Transform xf );
     
-    uint32 AddParticleBody( b2Body* body, b2Vec2 pos );
+    uint32 MoveFluidParticle( b2Fluid* fluid, b2Vec2 pos );
+    void DelFluidParticle( b2Fluid* fluid);
+    
     b2Vec2 GetGridForce( b2Body* body, uint32& grid, b2Vec2 newPos );
     
 private:
