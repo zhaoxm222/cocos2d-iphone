@@ -30,6 +30,7 @@ struct b2FluidParam
         limit2          =   limit * limit;
         simScale        =   0.02;
         simScaleI       =   1.f / simScale;
+        realRadius      =   smoothRadius * simScaleI;
         
         
         poly6Kern = 315.0f / (64.0f * 3.141592 * pow( smoothRadius, 9) );	// Wpoly6 kernel (denominator
@@ -50,6 +51,7 @@ struct b2FluidParam
     float limit2;
     float simScale;
     float simScaleI;
+    float realRadius;
     
     float poly6Kern;
     float spikyKern;

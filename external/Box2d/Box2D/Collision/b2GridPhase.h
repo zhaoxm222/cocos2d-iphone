@@ -30,13 +30,10 @@ struct b2Grid
     //uint32 collisionIdx_;
     bool collision_;
     
-    /// user data
-    void* userData_;
-    
     union
     {
         uint32 next_;
-        b2Body* body_;
+        b2Fluid* list_;
     };
 };
 
@@ -53,7 +50,9 @@ public:
     uint32 MoveFluidParticle( b2Fluid* fluid, b2Vec2 pos );
     void DelFluidParticle( b2Fluid* fluid);
     
-    b2Vec2 GetGridForce( b2Body* body, uint32& grid, b2Vec2 newPos );
+    b2Grid* GetGrid( uint32 gridID );
+    
+    uint32 GetNearGrid( uint32* grids, uint32 maxCap, b2Vec2 pos, float radius );
     
 private:
     
@@ -111,6 +110,17 @@ inline int32 b2GridPhase::GridX( float x )
 inline int32 b2GridPhase::GridY( float y )
 {
     return floor( ( y - pos_.y ) / GRID_SIZE );
+}
+
+inline b2Grid* b2GridPhase::GetGrid(uint32 gridID)
+{
+    if( gridID >= nHeight_ * nWidth_ )
+        return NULL;
+    
+    if( grids_[gridID] == b2_nullGrid )
+        return NULL;
+    
+    return gridData_ + grids_[gridID];
 }
 
 inline void b2GridPhase::DrawPixel(int32 x, int32 y)

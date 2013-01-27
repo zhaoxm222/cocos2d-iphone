@@ -121,6 +121,7 @@ uint32 b2GridPhase::AllocateGrid()
         memcpy(gridData_, oldData, gridDataSize_*sizeof(b2Grid));
         for( int i = gridDataSize_; i < gridDataCapacity_; ++i )
         {
+            gridData_[i].collision_ = false;
             gridData_[i].next_ = i + 1;
         }
         gridData_[gridDataCapacity_ - 1].next_ = b2_nullGrid;
@@ -128,10 +129,11 @@ uint32 b2GridPhase::AllocateGrid()
         freeGrids_ = gridDataSize_;
     }
     
-    int ret = freeGrids_;
+    uint32 ret = freeGrids_;
     freeGrids_ = gridData_[freeGrids_].next_;
-    
     ++ gridDataSize_;
+    
+    gridData_[ret].list_ = NULL;
     
     return ret;
 }
@@ -177,18 +179,86 @@ void b2GridPhase::DrawLine(b2Vec2 s, b2Vec2 e)
 
 uint32 b2GridPhase::MoveFluidParticle(b2Fluid* fluid, b2Vec2 pos)
 {
-    uint32 gridID = GridX( pos.x ) + GridY( pos.y ) * nWidth_;
+    uint32 newGridID = GridX( pos.x ) + GridY( pos.y ) * nWidth_;
     
-    if( grids_[gridID] == b2_nullGrid )
-        grids_[gridID] = AllocateGrid();
+    if( grids_[newGridID] == b2_nullGrid )
+        grids_[newGridID] = AllocateGrid();
     
+    if( fluid->gridID_ != b2_nullGrid && newGridID != fluid->gridID_ )
+    {
+        //remove from old grid
+        b2Grid& oldGrid = gridData_[ grids_[fluid->gridID_] ];
+        if( oldGrid.list_ == fluid )
+        {
+            oldGrid.list_ = fluid->next_;
+        }
+        else
+        {
+            fluid->prev_->next_ = fluid->next_;
+        }
+        
+        fluid->gridID_ = b2_nullGrid;
+    }
     
+    if( fluid->gridID_ != newGridID )
+    {
+        //add to new grid
+        b2Grid& newGrid = gridData_[ grids_[newGridID] ];
+        
+        if( newGrid.list_ == NULL )
+        {
+            newGrid.list_ = fluid;
+            fluid->prev_ = NULL;
+            fluid->next_ = NULL;
+        }
+        else
+        {
+            fluid->prev_ = NULL;
+            fluid->next_ = newGrid.list_;
+            newGrid.list_->prev_ = fluid;
+            newGrid.list_ = fluid;
+        }
+    }
+    
+    fluid->gridID_ = newGridID;
+    return newGridID;
 }
 
 
-b2Vec2 b2GridPhase::GetGridForce(b2Body *body, uint32 &grid, b2Vec2 newPos)
+uint32 b2GridPhase::GetNearGrid(uint32 *grids, uint32 maxCap, b2Vec2 pos, float radius)
 {
-    b2Vec2 ret;
+    int32 minX = GridX( pos.x - radius );
+    int32 minY = GridY( pos.y - radius );
+    int32 maxX = GridX( pos.x + radius );
+    int32 maxY = GridY( pos.y + radius );
     
-    return ret;
+    if( minX < 0 ) minX = 0;
+    if( minX >= nWidth_ ) return 0;
+    
+    if( maxX < 0 ) return 0;
+    if( maxX >= nWidth_ ) maxX = nWidth_ - 1;
+    
+    if( minY < 0 ) minY = 0;
+    if( minY >= nHeight_ ) return 0;
+    
+    if( maxY < 0 ) return 0;
+    if( maxY >= nHeight_ ) maxY = nHeight_ - 1;
+    
+    uint32 count = 0;
+    for( int32 x = minX; x <= maxX; ++x )
+    {
+        for( int32 y = minY; y <= maxY; ++y )
+        {
+            grids[ count++ ] = x + y * nWidth_;
+            if( count == maxCap )
+                return count;
+        }
+    }
+    
+    return count;
 }
+
+
+
+
+
