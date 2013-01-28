@@ -274,7 +274,7 @@ void b2Body::DestroyFixture(b2Fixture* fixture)
 b2Fluid* b2Body::CreateFluid()
 {
     void* mem = b2Alloc( sizeof(b2Fluid) );
-    m_fluid = new(mem) b2Fluid();
+    m_fluid = new(mem) b2Fluid( this );
     
     return m_fluid;
 }

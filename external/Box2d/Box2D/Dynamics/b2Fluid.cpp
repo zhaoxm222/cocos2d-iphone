@@ -14,9 +14,9 @@
 b2FluidParam gFluidParam;
 
 
-b2Fluid::b2Fluid()
+b2Fluid::b2Fluid( b2Body* body )
 {
-    body_ = NULL;
+    body_ = body;
     pressure_ = 0.f;
     density_ = 0.f;
     force_.SetZero();

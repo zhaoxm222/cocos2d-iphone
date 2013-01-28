@@ -443,7 +443,7 @@ void b2World::Solve(const b2TimeStep& step)
 		}
 
 		// The seed can be dynamic or kinematic.
-		if (seed->GetType() == b2_staticBody)
+		if (seed->GetType() == b2_staticBody || seed->GetType() == b2_fluidBody)
 		{
 			continue;
 		}
@@ -467,7 +467,7 @@ void b2World::Solve(const b2TimeStep& step)
 
 			// To keep islands as small as possible, we don't
 			// propagate islands across static bodies.
-			if (b->GetType() == b2_staticBody)
+			if (b->GetType() == b2_staticBody || b->GetType() == b2_fluidBody)
 			{
 				continue;
 			}
@@ -914,92 +914,99 @@ void b2World::SolveTOI(const b2TimeStep& step)
 
 void b2World::SolveFluid(const b2TimeStep &step)
 {
-    if( m_gridPhase == NULL )
-        return;
     
-    
-    //compute pressure
-    for (b2Body* body = m_bodyList; body; body = body->GetNext())
-	{
-		if( body->m_type != b2_fluidBody || body->m_fluid == NULL )
-            continue;
-        
-        if( body->m_fluid->gridID_ != b2_nullGrid )
+    if( m_gridPhase )
+    {
+        //compute pressure
+        for (b2Body* body = m_bodyList; body; body = body->GetNext())
         {
-            uint32 nearGrid[121];
-            uint32 nGrid = m_gridPhase->GetNearGrid( nearGrid, 121, body->m_sweep.c, gFluidParam.realRadius );
-
-            float sum = 0;
-            for( uint32 i = 0; i < nGrid; ++i )
+            if( body->m_type != b2_fluidBody || body->m_fluid == NULL )
+                continue;
+            
+            if( body->m_fluid->gridID_ != b2_nullGrid )
             {
-                b2Grid* grid = m_gridPhase->GetGrid( i );
-                if( grid == NULL )
-                    continue;
-                
-                for( b2Fluid* c = grid->list_; c; c = c->next_ )
+                uint32 nearGrid[121];
+                uint32 nGrid = m_gridPhase->GetNearGrid( nearGrid, 121, body->m_sweep.c, gFluidParam.realRadius );
+
+                float sum = 0;
+                for( uint32 i = 0; i < nGrid; ++i )
                 {
-                    if( c == body->m_fluid )
+                    b2Grid* grid = m_gridPhase->GetGrid( i );
+                    if( grid == NULL )
                         continue;
                     
-                    // eliminate too far fluid particle
-                    b2Vec2 vDist = gFluidParam.simScale * ( body->m_sweep.c - c->body_->m_sweep.c );
-                    float dist2 = vDist.LengthSquared();
-                    if( dist2 > gFluidParam.smoothRadius2 )
-                        continue;
-                    
-                    float d =  gFluidParam.smoothRadius2 - dist2;
-                    sum += d * d * d;
+                    for( b2Fluid* c = grid->list_; c; c = c->next_ )
+                    {
+                        if( c == body->m_fluid )
+                            continue;
+                        
+                        // eliminate too far fluid particle
+                        b2Vec2 vDist = gFluidParam.simScale * ( body->m_sweep.c - c->body_->m_sweep.c );
+                        float dist2 = vDist.LengthSquared();
+                        if( dist2 > gFluidParam.smoothRadius2 )
+                            continue;
+                        
+                        float d =  gFluidParam.smoothRadius2 - dist2;
+                        sum += d * d * d;
+                    }
                 }
+                body->m_fluid->density_ = sum * gFluidParam.pMass * gFluidParam.poly6Kern;
+                body->m_fluid->pressure_ = ( body->m_fluid->density_ - gFluidParam.pRestDensity ) * gFluidParam.intStiff;
+                body->m_fluid->density_ = 1.0f / body->m_fluid->density_;
             }
-            body->m_fluid->density_ = sum * gFluidParam.pMass * gFluidParam.poly6Kern;
-            body->m_fluid->pressure_ = ( body->m_fluid->density_ - gFluidParam.pRestDensity ) * gFluidParam.intStiff;
-            body->m_fluid->density_ = 1.0f / body->m_fluid->density_;
+        }
+    
+    
+        //compute force
+        for (b2Body* body = m_bodyList; body; body = body->GetNext())
+        {
+            if( body->m_type != b2_fluidBody || body->m_fluid == NULL )
+                continue;
+            
+            b2Fluid* iFluid = body->m_fluid;
+            if( iFluid->gridID_ != b2_nullGrid )
+            {
+                uint32 nearGrid[121];
+                uint32 nGrid = m_gridPhase->GetNearGrid( nearGrid, 121, body->m_sweep.c, gFluidParam.realRadius );
+                
+                for( uint32 i = 0; i < nGrid; ++i )
+                {
+                    b2Grid* grid = m_gridPhase->GetGrid( nearGrid[i] );
+                    if( grid == NULL )
+                        continue;
+                    
+                    for( b2Fluid* c = grid->list_; c; c = c->next_ )
+                    {
+                        if( c == body->m_fluid )
+                            continue;
+                        
+                        // eliminate too far fluid particle
+                        b2Vec2 vDist = gFluidParam.simScale * ( body->m_sweep.c - c->body_->m_sweep.c );
+                        float dist2 = vDist.LengthSquared();
+                        if( dist2 > gFluidParam.smoothRadius2 )
+                            continue;
+                        
+                        float dist = sqrt( dist2 );
+                        if( dist < b2_epsilon )
+                            dist = b2_epsilon;
+                        float d = gFluidParam.smoothRadius - dist;
+                        float pterm = -0.5f * d * gFluidParam.spikyKern * ( iFluid->pressure_ + c->pressure_ ) / dist;
+                        float dterm = d * iFluid->pressure_ * c->pressure_;
+                        float vterm = gFluidParam.lapKern * gFluidParam.viscosity;
+                        iFluid->force_ += dterm * ( pterm * vDist + vterm * ( c->body_->m_linearVelocity - body->m_linearVelocity) );
+                    }
+                }
+
+            }
+            
         }
     }
-    
-    
-    //compute force
-    for (b2Body* body = m_bodyList; body; body = body->GetNext())
-	{
-		if( body->m_type != b2_fluidBody || body->m_fluid == NULL )
-            continue;
-        
-        b2Fluid* iFluid = body->m_fluid;
-        if( iFluid->gridID_ != b2_nullGrid )
-        {
-            uint32 nearGrid[121];
-            uint32 nGrid = m_gridPhase->GetNearGrid( nearGrid, 121, body->m_sweep.c, gFluidParam.realRadius );
-            
-            for( uint32 i = 0; i < nGrid; ++i )
-            {
-                b2Grid* grid = m_gridPhase->GetGrid( nearGrid[i] );
-                if( grid == NULL )
-                    continue;
-                
-                for( b2Fluid* c = grid->list_; c; c = c->next_ )
-                {
-                    if( c == body->m_fluid )
-                        continue;
-                    
-                    // eliminate too far fluid particle
-                    b2Vec2 vDist = gFluidParam.simScale * ( body->m_sweep.c - c->body_->m_sweep.c );
-                    float dist2 = vDist.LengthSquared();
-                    if( dist2 > gFluidParam.smoothRadius2 )
-                        continue;
-                    
-                    float dist = sqrt( dist2 );
-                    if( dist < b2_epsilon )
-                        dist = b2_epsilon;
-                    float d = gFluidParam.smoothRadius - dist;
-                    float pterm = -0.5f * d * gFluidParam.spikyKern * ( iFluid->pressure_ + c->pressure_ ) / dist;
-                    float dterm = d * iFluid->pressure_ * c->pressure_;
-                    float vterm = gFluidParam.lapKern * gFluidParam.viscosity;
-                    iFluid->force_ += dterm * ( pterm * vDist + vterm * ( c->body_->m_linearVelocity - body->m_linearVelocity) );
-                }
-            }
 
-        }
-        
+    
+    for (b2Body* body = m_bodyList; body; body = body->GetNext())
+    {
+        if( body->m_type != b2_fluidBody )
+            continue;
         
         b2Vec2 c = body->m_sweep.c;
 		b2Vec2 v = body->m_linearVelocity;
@@ -1009,7 +1016,19 @@ void b2World::SolveFluid(const b2TimeStep &step)
         // Integrate velocities.
         v += step.dt * (body->m_gravityScale * m_gravity + body->m_invMass * body->m_force);
         
+        // Solve vecocity
+        b2Vec2 minBound(0,0), maxBound(640 /32, 960/32);
+        if( c.x > maxBound.x && v.x > 0 )
+            v.x = -v.x * 0.2f;
+        if( c.y > maxBound.y && v.y > 0 )
+            v.y = -v.y * 0.2f;
+        if( c.x < minBound.x && v.x < 0 )
+            v.x = -v.x * 0.2f;
+        if( c.y < minBound.x && v.y < 0 )
+            v.y = -v.y * 0.2f;
+        
         // Integrate fluid force
+        if( body->m_fluid )
         {
             // Compute Acceleration
             b2Vec2 accel = body->m_fluid->force_;
@@ -1024,7 +1043,16 @@ void b2World::SolveFluid(const b2TimeStep &step)
         }
         
         
+        c += step.dt * v;
+        body->m_sweep.c = c;
+        body->m_linearVelocity = v;
         
+        
+        if( m_gridPhase && body->m_fluid )
+        {
+            m_gridPhase->MoveFluidParticle( body->m_fluid, c );
+        }
+
 	}
 }
 
@@ -1058,6 +1086,10 @@ void b2World::Step(float32 dt, int32 velocityIterations, int32 positionIteration
 	step.dtRatio = m_inv_dt0 * dt;
 
 	step.warmStarting = m_warmStarting;
+    
+    {
+        SolveFluid(step);
+    }
 
 	// Update contacts. This is where some contacts are destroyed.
 	{
@@ -1304,6 +1336,13 @@ void b2World::DrawDebugData()
 					DrawShape(f, xf, b2Color(0.9f, 0.7f, 0.7f));
 				}
 			}
+            
+            // draw fluid
+            if( b->m_type == b2_fluidBody )
+            {
+                b2Vec2 axis = b2Vec2(1.0f, 0.0f);
+                m_debugDraw->DrawSolidCircle( b->m_sweep.c, 0.2, axis, b2Color(0.2f, 0.2f, 0.7f));
+            }
 		}
 	}
 

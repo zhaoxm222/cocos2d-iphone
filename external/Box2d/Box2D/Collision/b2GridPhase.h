@@ -17,7 +17,7 @@
 #define GRID_COLLISION_SIZE 16
 #define DEFAULT_GRID_CAPACITY 1000
 #define GRID_SIZE (0.25f)
-#define b2_nullGrid (0xFFFF)
+#define b2_nullGrid (0xFFFFFFFF)
 
 struct b2Grid
 {

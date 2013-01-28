@@ -62,7 +62,7 @@ extern b2FluidParam gFluidParam;
 
 struct b2Fluid
 {
-    b2Fluid();
+    b2Fluid( b2Body* body );
     
     b2Body* body_;
     

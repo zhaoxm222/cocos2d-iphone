@@ -191,10 +191,14 @@ uint32 b2GridPhase::MoveFluidParticle(b2Fluid* fluid, b2Vec2 pos)
         if( oldGrid.list_ == fluid )
         {
             oldGrid.list_ = fluid->next_;
+            if( fluid->next_ )
+                fluid->next_->prev_ = NULL;
         }
         else
         {
             fluid->prev_->next_ = fluid->next_;
+            if( fluid->next_)
+                fluid->next_->prev_ = fluid->prev_;
         }
         
         fluid->gridID_ = b2_nullGrid;

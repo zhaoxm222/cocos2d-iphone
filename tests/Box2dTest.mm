@@ -175,6 +175,8 @@ enum {
 	world->SetAllowSleeping(true);
 
 	world->SetContinuousPhysics(true);
+    
+    world->CreateGridPhase(320, 480, b2Vec2(-160,-240));
 
 	m_debugDraw = new GLESDebugDraw( PTM_RATIO );
 	world->SetDebugDraw(m_debugDraw);
@@ -216,6 +218,29 @@ enum {
 	// right
 	groundBox.Set(b2Vec2(s.width/PTM_RATIO,s.height/PTM_RATIO), b2Vec2(s.width/PTM_RATIO,0));
 	groundBody->CreateFixture(&groundBox,0);
+    
+    
+    CGPoint p = { s.width / 2 , s.height / 2 };
+    CGPoint center = p;
+    int radius = 20;
+    for( int i=-radius; i<radius; ++i )
+    {
+        for( int j=-radius; j<radius; ++j )
+        {
+            p.x = center.x + i * 5;
+            p.y = center.y + j * 5;
+            
+            
+            // Define the dynamic body.
+            //Set up a 1m squared box in the physics world
+            b2BodyDef bodyDef;
+            bodyDef.type = b2_fluidBody;
+            bodyDef.position.Set(p.x/PTM_RATIO, p.y/PTM_RATIO);
+            b2Body *body = world->CreateBody(&bodyDef);
+            body->CreateFluid();
+        }
+    }
+
 }
 
 -(void) draw
