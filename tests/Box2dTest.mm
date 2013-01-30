@@ -119,14 +119,14 @@ enum {
 		[self addChild:parent z:0 tag:kTagParentNode];
 
 
-		[self addNewSpriteAtPosition:ccp(s.width/2, s.height/2)];
-
 		CCLabelTTF *label = [CCLabelTTF labelWithString:@"Tap screen" fontName:@"Marker Felt" fontSize:32];
 		[self addChild:label z:0];
 		[label setColor:ccc3(0,0,255)];
 		label.position = ccp( s.width/2, s.height-50);
 
 		[self scheduleUpdate];
+        
+        bGenFluid_ = false;
 	}
 	return self;
 }
@@ -176,7 +176,7 @@ enum {
 
 	world->SetContinuousPhysics(true);
     
-    world->CreateGridPhase(320, 480, b2Vec2(-160,-240));
+    world->CreateGridPhase( b2Vec2(-10,-10), b2Vec2(50, 50) );
 
 	m_debugDraw = new GLESDebugDraw( PTM_RATIO );
 	world->SetDebugDraw(m_debugDraw);
@@ -187,6 +187,7 @@ enum {
 	//		flags += b2Draw::e_aabbBit;
 	//		flags += b2Draw::e_pairBit;
 	//		flags += b2Draw::e_centerOfMassBit;
+    //flags += b2Draw::e_gridPhase;
 	m_debugDraw->SetFlags(flags);
 
 
@@ -204,13 +205,27 @@ enum {
 
 	// bottom
 
-	groundBox.Set(b2Vec2(0,0), b2Vec2(s.width/PTM_RATIO,0));
+	groundBox.Set(b2Vec2(0,1), b2Vec2(s.width * 0.8/PTM_RATIO,2));
 	groundBody->CreateFixture(&groundBox,0);
 
 	// top
 	groundBox.Set(b2Vec2(0,s.height/PTM_RATIO), b2Vec2(s.width/PTM_RATIO,s.height/PTM_RATIO));
 	groundBody->CreateFixture(&groundBox,0);
+    
+    // mid
+	groundBox.Set(b2Vec2(0,s.height * 0.7/PTM_RATIO ), b2Vec2(s.width*0.5/PTM_RATIO,s.height*0.75/PTM_RATIO ));
+	groundBody->CreateFixture(&groundBox,0);
 
+    groundBox.Set(b2Vec2(s.width*0.3/PTM_RATIO,s.height * 0.4/PTM_RATIO ), b2Vec2(s.width*0.6/PTM_RATIO,s.height*0.4/PTM_RATIO ));
+	groundBody->CreateFixture(&groundBox,0);
+    groundBox.Set(b2Vec2(s.width*0.3/PTM_RATIO,s.height * 0.4/PTM_RATIO ), b2Vec2(s.width*0.3/PTM_RATIO,s.height*0.5/PTM_RATIO ));
+	groundBody->CreateFixture(&groundBox,0);
+    groundBox.Set(b2Vec2(s.width*0.6/PTM_RATIO,s.height * 0.4/PTM_RATIO ), b2Vec2(s.width*0.6/PTM_RATIO,s.height*0.5/PTM_RATIO ));
+	groundBody->CreateFixture(&groundBox,0);
+    
+    groundBox.Set(b2Vec2(s.width*0.5/PTM_RATIO,s.height * 0.3/PTM_RATIO ), b2Vec2(s.width/PTM_RATIO,s.height*0.36/PTM_RATIO ));
+	groundBody->CreateFixture(&groundBox,0);
+    
 	// left
 	groundBox.Set(b2Vec2(0,s.height/PTM_RATIO), b2Vec2(0,0));
 	groundBody->CreateFixture(&groundBox,0);
@@ -219,28 +234,6 @@ enum {
 	groundBox.Set(b2Vec2(s.width/PTM_RATIO,s.height/PTM_RATIO), b2Vec2(s.width/PTM_RATIO,0));
 	groundBody->CreateFixture(&groundBox,0);
     
-    
-    CGPoint p = { s.width / 2 , s.height / 2 };
-    CGPoint center = p;
-    int radius = 20;
-    for( int i=-radius; i<radius; ++i )
-    {
-        for( int j=-radius; j<radius; ++j )
-        {
-            p.x = center.x + i * 5;
-            p.y = center.y + j * 5;
-            
-            
-            // Define the dynamic body.
-            //Set up a 1m squared box in the physics world
-            b2BodyDef bodyDef;
-            bodyDef.type = b2_fluidBody;
-            bodyDef.position.Set(p.x/PTM_RATIO, p.y/PTM_RATIO);
-            b2Body *body = world->CreateBody(&bodyDef);
-            body->CreateFluid();
-        }
-    }
-
 }
 
 -(void) draw
@@ -311,20 +304,50 @@ enum {
 	// Instruct the world to perform a single step of simulation. It is
 	// generally best to keep the time step and iterations fixed.
 	world->Step(dt, velocityIterations, positionIterations);
+    
+    if( bGenFluid_ )
+    {
+        CGPoint p = genFluidPos_;
+        p.x += rand() % 16;
+        
+        // Define the fluid body.
+        b2BodyDef bodyDef;
+        bodyDef.type = b2_fluidBody;
+        bodyDef.position.Set(p.x/PTM_RATIO, p.y/PTM_RATIO);
+        bodyDef.linearDamping = 1.f;
+        b2Body *body = world->CreateBody(&bodyDef);
+        body->CreateFluid();
+
+    }
+
 }
 
 #ifdef __CC_PLATFORM_IOS
+- (void)ccTouchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    bGenFluid_ = true;
+    for( UITouch *touch in touches ) {
+		CGPoint location = [touch locationInView: [touch view]];
+        
+		location = [[CCDirector sharedDirector] convertToGL: location];
+        
+		genFluidPos_ = location;
+	}
+}
+- (void)ccTouchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    for( UITouch *touch in touches ) {
+		CGPoint location = [touch locationInView: [touch view]];
+        
+		location = [[CCDirector sharedDirector] convertToGL: location];
+        
+		genFluidPos_ = location;
+	}
+}
 
 - (void)ccTouchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
 {
-	//Add a new body/atlas sprite at the touched location
-	for( UITouch *touch in touches ) {
-		CGPoint location = [touch locationInView: [touch view]];
-
-		location = [[CCDirector sharedDirector] convertToGL: location];
-
-		[self addNewSpriteAtPosition: location];
-	}
+	bGenFluid_ = false;
 }
 
 - (void)accelerometer:(UIAccelerometer*)accelerometer didAccelerate:(UIAcceleration*)acceleration

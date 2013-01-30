@@ -32,6 +32,7 @@
 #include <Box2D/Collision/b2TimeOfImpact.h>
 #include <Box2D/Common/b2Draw.h>
 #include <Box2D/Common/b2Timer.h>
+#include <Box2D/Common/b2Draw.h>
 #include <new>
 
 b2World::b2World(const b2Vec2& gravity)
@@ -92,13 +93,13 @@ b2World::~b2World()
     }
 }
 
-void b2World::CreateGridPhase(uint32 width, uint32 height, b2Vec2 pos)
+void b2World::CreateGridPhase( b2Vec2 pos, b2Vec2 size )
 {
     if( m_gridPhase )
         b2Free( m_gridPhase );
     
     void* mem = b2Alloc( sizeof(b2GridPhase) );
-    m_gridPhase = new(mem) b2GridPhase( width, height );
+    m_gridPhase = new(mem) b2GridPhase( pos, size );
 }
 
 void b2World::SetDestructionListener(b2DestructionListener* listener)
@@ -931,7 +932,7 @@ void b2World::SolveFluid(const b2TimeStep &step)
                 float sum = 0;
                 for( uint32 i = 0; i < nGrid; ++i )
                 {
-                    b2Grid* grid = m_gridPhase->GetGrid( i );
+                    b2Grid* grid = m_gridPhase->GetGrid( nearGrid[i] );
                     if( grid == NULL )
                         continue;
                     
@@ -964,6 +965,8 @@ void b2World::SolveFluid(const b2TimeStep &step)
                 continue;
             
             b2Fluid* iFluid = body->m_fluid;
+            iFluid->force_.SetZero();
+            
             if( iFluid->gridID_ != b2_nullGrid )
             {
                 uint32 nearGrid[121];
@@ -1002,13 +1005,15 @@ void b2World::SolveFluid(const b2TimeStep &step)
         }
     }
 
-    
-    for (b2Body* body = m_bodyList; body; body = body->GetNext())
+    b2Body* body = m_bodyList;
+    while ( body )
     {
         if( body->m_type != b2_fluidBody )
+        {
+            body = body->GetNext();
             continue;
+        }
         
-        b2Vec2 c = body->m_sweep.c;
 		b2Vec2 v = body->m_linearVelocity;
         
         body->m_sweep.c0 = body->m_sweep.c;
@@ -1016,16 +1021,6 @@ void b2World::SolveFluid(const b2TimeStep &step)
         // Integrate velocities.
         v += step.dt * (body->m_gravityScale * m_gravity + body->m_invMass * body->m_force);
         
-        // Solve vecocity
-        b2Vec2 minBound(0,0), maxBound(640 /32, 960/32);
-        if( c.x > maxBound.x && v.x > 0 )
-            v.x = -v.x * 0.2f;
-        if( c.y > maxBound.y && v.y > 0 )
-            v.y = -v.y * 0.2f;
-        if( c.x < minBound.x && v.x < 0 )
-            v.x = -v.x * 0.2f;
-        if( c.y < minBound.x && v.y < 0 )
-            v.y = -v.y * 0.2f;
         
         // Integrate fluid force
         if( body->m_fluid )
@@ -1042,17 +1037,26 @@ void b2World::SolveFluid(const b2TimeStep &step)
             v += step.dt * accel;
         }
         
-        
-        c += step.dt * v;
-        body->m_sweep.c = c;
+        // apply damping
+        v *= b2Clamp(1.0f - step.dt * body->m_linearDamping, 0.0f, 1.0f);
         body->m_linearVelocity = v;
-        
+
         
         if( m_gridPhase && body->m_fluid )
         {
-            m_gridPhase->MoveFluidParticle( body->m_fluid, c );
+            uint32 newGrid = m_gridPhase->MoveFluidParticle( body->m_fluid, step.dt );
+            
+            if( newGrid == b2_nullGrid )
+            {
+                b2Body * del = body;
+                body = body->GetNext();
+                DestroyBody( del );
+                
+                continue;
+            }
         }
 
+        body = body->GetNext();
 	}
 }
 
@@ -1068,7 +1072,6 @@ void b2World::Step(float32 dt, int32 velocityIterations, int32 positionIteration
 		m_flags &= ~e_newFixture;
 	}
 
-	m_flags |= e_locked;
 
 	b2TimeStep step;
 	step.dt = dt;
@@ -1088,8 +1091,12 @@ void b2World::Step(float32 dt, int32 velocityIterations, int32 positionIteration
 	step.warmStarting = m_warmStarting;
     
     {
+        b2Timer timer;
         SolveFluid(step);
+        m_profile.solveFluid = timer.GetMilliseconds();
     }
+    
+    m_flags |= e_locked;
 
 	// Update contacts. This is where some contacts are destroyed.
 	{
@@ -1408,6 +1415,11 @@ void b2World::DrawDebugData()
 			m_debugDraw->DrawTransform(xf);
 		}
 	}
+    
+    if( flags & b2Draw::e_gridPhase && m_gridPhase )
+    {
+        m_gridPhase->DrawDebug( m_debugDraw, &m_stackAllocator );
+    }
 }
 
 int32 b2World::GetProxyCount() const

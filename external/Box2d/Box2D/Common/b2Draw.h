@@ -18,6 +18,9 @@
 
 #include <Box2D/Common/b2Math.h>
 
+#ifndef B2_DRAW_H
+#define B2_DRAW_H
+
 /// Color for debug drawing. Each value has the range [0,1].
 struct b2Color
 {
@@ -42,7 +45,8 @@ public:
 		e_jointBit				= 0x0002,	///< draw joint connections
 		e_aabbBit				= 0x0004,	///< draw axis aligned bounding boxes
 		e_pairBit				= 0x0008,	///< draw broad-phase pairs
-		e_centerOfMassBit		= 0x0010	///< draw center of mass frame
+		e_centerOfMassBit		= 0x0010,	///< draw center of mass frame
+        e_gridPhase             = 0x0020
 	};
 
 	/// Set the drawing flags.
@@ -79,3 +83,5 @@ public:
 protected:
 	uint32 m_drawFlags;
 };
+
+#endif

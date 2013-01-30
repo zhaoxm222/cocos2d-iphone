@@ -50,7 +50,7 @@ public:
 	~b2World();
     
     /// Create Grid phase
-    void CreateGridPhase( uint32 width, uint32 height, b2Vec2 pos);
+    void CreateGridPhase( b2Vec2 pos, b2Vec2 size );
 
 	/// Register a destruction listener. The listener is owned by you and must
 	/// remain in scope.

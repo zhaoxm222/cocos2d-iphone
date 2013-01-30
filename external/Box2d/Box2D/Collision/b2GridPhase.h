@@ -11,6 +11,8 @@
 
 #include <Box2D/Common/b2Settings.h>
 #include <Box2D/Common/b2Math.h>
+#include <Box2D/Common/b2Draw.h>
+#include <Box2D/Common/b2StackAllocator.h>
 #include <Box2D/Collision/Shapes/b2Shape.h>
 #include <Box2D/Dynamics/b2Fluid.h>
 
@@ -21,11 +23,6 @@
 
 struct b2Grid
 {
-    
-    void AddParticle( b2Body* body );
-    void DelParticle( b2Body* body );
-    
-    
     /// collision index , reference to b2GridPhase collisionData
     //uint32 collisionIdx_;
     bool collision_;
@@ -41,19 +38,21 @@ struct b2Grid
 class b2GridPhase
 {
 public:
-    b2GridPhase( uint32 width, uint32 height );
-    
-    void SetPosition( b2Vec2& pos );
+    b2GridPhase( b2Vec2 pos, b2Vec2 size );
     
     void AddCollisionShape( b2Shape* shape, b2Transform xf );
     
-    uint32 MoveFluidParticle( b2Fluid* fluid, b2Vec2 pos );
+    uint32 MoveFluidParticle( b2Fluid* fluid, float t );
     void DelFluidParticle( b2Fluid* fluid);
     
     b2Grid* GetGrid( uint32 gridID );
     
     uint32 GetNearGrid( uint32* grids, uint32 maxCap, b2Vec2 pos, float radius );
     
+    bool IsInBlock( const b2Vec2& pos );
+    bool IsInBlock( int32 gridX, int32 gridY );
+    
+    void DrawDebug( b2Draw* draw, b2StackAllocator* stack );
 private:
     
     uint32 AllocateGrid();
@@ -86,22 +85,6 @@ private:
 };
 
 
-inline void b2Grid::AddParticle(b2Body *body)
-{
-    
-}
-
-inline void b2Grid::DelParticle(b2Body *body)
-{
-    
-}
-
-
-inline void b2GridPhase::SetPosition( b2Vec2& pos )
-{
-    pos_ = pos;
-}
-
 inline int32 b2GridPhase::GridX( float x )
 {
     return floor( ( x - pos_.x ) / GRID_SIZE );
@@ -110,6 +93,21 @@ inline int32 b2GridPhase::GridX( float x )
 inline int32 b2GridPhase::GridY( float y )
 {
     return floor( ( y - pos_.y ) / GRID_SIZE );
+}
+
+inline bool b2GridPhase::IsInBlock(const b2Vec2& pos)
+{
+    uint32 gridID = GridX( pos.x ) + GridY( pos.y ) * nWidth_;
+    return grids_[gridID] != b2_nullGrid && gridData_[grids_[gridID]].collision_;
+}
+
+inline bool b2GridPhase::IsInBlock(int32 gridX, int32 gridY)
+{
+    if( gridX < 0 || gridX >= nWidth_ || gridY < 0 || gridY >= nHeight_ )
+        return false;
+    
+    uint32 gridID = gridX + gridY * nWidth_;
+    return grids_[gridID] != b2_nullGrid && gridData_[grids_[gridID]].collision_;
 }
 
 inline b2Grid* b2GridPhase::GetGrid(uint32 gridID)

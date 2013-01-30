@@ -402,6 +402,8 @@ private:
 	friend class b2WeldJoint;
 	friend class b2FrictionJoint;
 	friend class b2RopeJoint;
+    
+    friend class b2GridPhase;
 
 	// m_flags
 	enum

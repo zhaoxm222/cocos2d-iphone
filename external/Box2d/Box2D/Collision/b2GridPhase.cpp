@@ -8,6 +8,7 @@
 
 #include <memory>
 
+#include <Box2D/Dynamics/b2Body.h>
 #include <Box2D/Collision/b2GridPhase.h>
 #include <Box2D/Collision/Shapes/b2CircleShape.h>
 #include <Box2D/Collision/Shapes/b2EdgeShape.h>
@@ -15,10 +16,11 @@
 #include <Box2D/Collision/Shapes/b2PolygonShape.h>
 
 
-b2GridPhase::b2GridPhase( uint32 width, uint32 height )
+b2GridPhase::b2GridPhase( b2Vec2 pos, b2Vec2 size )
 {
-    nWidth_ = width;
-    nHeight_ = height;
+    nWidth_ = ceil( size.x / GRID_SIZE );
+    nHeight_ = ceil( size.y / GRID_SIZE );
+    pos_ = pos;
     
     //collisionDataSize_ = 0;
     //collisionDataCapacity_ = DEFAULT_GRID_CAPACITY * GRID_COLLISION_SIZE * GRID_COLLISION_SIZE;
@@ -39,8 +41,6 @@ b2GridPhase::b2GridPhase( uint32 width, uint32 height )
     gridData_[gridDataCapacity_-1].next_ = b2_nullGrid;
     
     freeGrids_ = 0;
-    
-    pos_.SetZero();
 }
 
 
@@ -79,7 +79,7 @@ void b2GridPhase::AddCollisionShape(b2Shape *shape, b2Transform xf)
 			for (int32 i = 1; i < count; ++i)
 			{
 				b2Vec2 v2 = b2Mul(xf, vertices[i]);
-				//DrawSegment(v1, v2, color);
+				DrawLine(v1, v2);
 				//DrawCircle(v1, 0.05f, color);
 				v1 = v2;
 			}
@@ -157,34 +157,141 @@ void b2GridPhase::DrawLine(b2Vec2 s, b2Vec2 e)
     
     if( abs(delt.x) > abs(delt.y) )
     {
-        float slop = delt.y / delt.x;
+        float slop = delt.y * GRID_SIZE / delt.x;
         int step = delt.x > 0 ?  1 : -1;
-        for( int i = startX; i <= endX; i += step )
+        int i = startX;
+        while( i != endX )
         {
-            DrawPixel( i, GridY( s.y + slop ));
+            s.y += slop;
+            DrawPixel( i, GridY( s.y ));
+            i += step;
         }
     }
     else
     {
-        float slop = delt.x / delt.y;
+        float slop = delt.x * GRID_SIZE / delt.y;
         int step = delt.y > 0 ? 1 : -1;
-        for( int i = startY; i <= endY; i += step )
+        int i = startY;
+        while( i != endY )
         {
-            DrawPixel(GridX(s.x + slop), i);
+            s.x += slop;
+            DrawPixel( GridX(s.x), i);
+            i += step;
         }
     }
     
 }
 
 
-uint32 b2GridPhase::MoveFluidParticle(b2Fluid* fluid, b2Vec2 pos)
+uint32 b2GridPhase::MoveFluidParticle(b2Fluid* fluid, float t)
 {
-    uint32 newGridID = GridX( pos.x ) + GridY( pos.y ) * nWidth_;
+    b2Vec2 oldPos = fluid->body_->m_sweep.c;
+    int32 oldGridX = GridX( oldPos.x );
+    int32 oldGridY = GridY( oldPos.y );
+    uint32 oldGridID = oldGridX + oldGridY * nWidth_;
     
-    if( grids_[newGridID] == b2_nullGrid )
-        grids_[newGridID] = AllocateGrid();
+    // if in block
+    if( grids_[oldGridID] != b2_nullGrid && gridData_[grids_[oldGridID]].collision_ )
+    {
+       // find nearest unblock grid
+        
+    }
     
-    if( fluid->gridID_ != b2_nullGrid && newGridID != fluid->gridID_ )
+    
+    
+    // start at safe pos
+    b2Vec2 newPos = oldPos;
+    b2Vec2 speed = fluid->body_->m_linearVelocity;
+    
+    int32 newGridX = GridX( newPos.x );
+    int32 newGridY = GridY( newPos.y );
+    
+    while( t > 0 )
+    {
+        float tx = b2_maxFloat;
+        if( speed.x > b2_epsilon )
+        {
+            tx = ( ( newGridX + 1 ) * GRID_SIZE + pos_.x - newPos.x ) / speed.x;
+        }
+        else if( speed.x < -b2_epsilon )
+        {
+            tx = ( newGridX * GRID_SIZE + pos_.x - newPos.x ) / speed.x;
+        }
+        
+        float ty = b2_maxFloat;
+        if( speed.y > b2_epsilon )
+        {
+            ty = ( ( newGridY + 1 ) * GRID_SIZE + pos_.y - newPos.y ) / speed.y;
+        }
+        else if( speed.y < -b2_epsilon )
+        {
+            ty = ( newGridY * GRID_SIZE + pos_.y - newPos.y ) / speed.y;
+        }
+        
+        float minT = b2Min( tx, ty);
+        if( t <= minT )
+        {
+            newPos += t * speed;
+            break;
+        }
+        
+        if( tx < ty )
+        {
+            newPos += tx * speed;
+            t -= tx;
+            
+            if( speed.x > 0 )
+            {
+                if( IsInBlock( newGridX + 1, newGridY) )
+                    speed.x *= -0.2f;
+                else
+                    ++newGridX;
+            }
+            else
+            {
+                if( IsInBlock( newGridX - 1, newGridY))
+                    speed.x *= -0.2f;
+                else
+                    --newGridX;
+            }
+        }
+        else
+        {
+            newPos += ty * speed;
+            t -= ty;
+            
+            if( speed.y > 0 )
+            {
+                if( IsInBlock( newGridX, newGridY + 1) )
+                    speed.y *= -0.2f;
+                else
+                    ++newGridY;
+            }
+            else
+            {
+                if( IsInBlock( newGridX, newGridY -1 ) )
+                    speed.y *= -0.2f;
+                else
+                    --newGridY;
+            }
+        }
+    }
+    
+    
+    fluid->body_->m_linearVelocity = speed;
+    fluid->body_->m_sweep.c = newPos;
+    
+    
+    // new grid
+    newGridX = GridX(newPos.x);
+    newGridY = GridY(newPos.y);
+        
+    uint32 newGridID = newGridX + newGridY * nWidth_;
+    if( newGridX < 0 || newGridX >= nWidth_ || newGridY < 0 || newGridY >= nHeight_ )
+        newGridID = b2_nullGrid;
+    
+    // remove old grid
+    if( fluid->gridID_ != b2_nullGrid && fluid->gridID_ != newGridID )
     {
         //remove from old grid
         b2Grid& oldGrid = gridData_[ grids_[fluid->gridID_] ];
@@ -204,8 +311,13 @@ uint32 b2GridPhase::MoveFluidParticle(b2Fluid* fluid, b2Vec2 pos)
         fluid->gridID_ = b2_nullGrid;
     }
     
-    if( fluid->gridID_ != newGridID )
+    
+    // add to new grid
+    if( newGridID != b2_nullGrid && fluid->gridID_ != newGridID )
     {
+        if( grids_[newGridID] == b2_nullGrid )
+            grids_[newGridID] = AllocateGrid();
+
         //add to new grid
         b2Grid& newGrid = gridData_[ grids_[newGridID] ];
         
@@ -262,7 +374,47 @@ uint32 b2GridPhase::GetNearGrid(uint32 *grids, uint32 maxCap, b2Vec2 pos, float 
     return count;
 }
 
+void b2GridPhase::DrawDebug(b2Draw *draw, b2StackAllocator* stack)
+{
+    uint32 maxVertice = 4 * 1024;
+    b2Vec2 verts[4];
+    
+    for( int i = 0; i < nWidth_; ++i )
+    {
+        for( int j = 0; j < nHeight_; ++j )
+        {
+            uint32 gridID = i + j * nWidth_;
+            if( grids_[gridID] == b2_nullGrid || gridData_[ grids_[gridID] ].collision_ == false )
+                continue;
+            
+            int currVertice = 0;
+            verts[ currVertice ] = pos_;
+            verts[ currVertice ].x += i * GRID_SIZE;
+            verts[ currVertice ].y += j * GRID_SIZE;
+            currVertice++;
+            
+            verts[ currVertice ] = pos_;
+            verts[ currVertice ].x += i * GRID_SIZE + GRID_SIZE;
+            verts[ currVertice ].y += j * GRID_SIZE;
+            currVertice++;
+            
+            verts[ currVertice ] = pos_;
+            verts[ currVertice ].x += i * GRID_SIZE + GRID_SIZE;
+            verts[ currVertice ].y += j * GRID_SIZE + GRID_SIZE;
+            currVertice++;
 
+            verts[ currVertice ] = pos_;
+            verts[ currVertice ].x += i * GRID_SIZE;
+            verts[ currVertice ].y += j * GRID_SIZE + GRID_SIZE;
+            currVertice++;
+            
+            draw->DrawPolygon(verts, 4, b2Color(1, 1, 1));
+            
+            if( currVertice >= maxVertice - 1 )
+                break;
+        }
+    }
+}
 
 
 
